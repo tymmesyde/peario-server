@@ -1,0 +1,21 @@
+{
+  "name": "soffa-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "tsc && node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tymmesyde",
+  "license": "ISC",
+  "dependencies": {
+    "@types/uuid": "^7.0.2",
+    "@types/ws": "^7.2.3",
+    "uuid": "^7.0.3",
+    "ws": "^7.2.3"
+  },
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  }
+}
