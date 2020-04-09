@@ -1,10 +1,17 @@
+import fs from 'fs';
+import https from 'https';
 import WS from './ws';
 import { Room, User, Client, EventData, Player } from './models';
-import { WS_PORT } from './config';
+import { PORT, PEM_CERT, PEM_KEY } from './config';
 
 const ROOMS: Room[] = [];
 
-const wss = new WS(WS_PORT);
+const server = https.createServer({
+    cert: fs.readFileSync(PEM_CERT),
+    key: fs.readFileSync(PEM_KEY)
+}).listen(PORT);
+const wss = new WS(server);
+
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('player.sync', syncPlayer);

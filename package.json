@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "start": "node . -- prod",
-    "serve": "tsc-watch --onSuccess \"node . -- dev\"",
+    "start": "npm run build && node .",
+    "serve": "tsc-watch --onSuccess \"node .\"",
     "build": "tsc"
   },
   "author": "tymmesyde",

@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 
-const env = process.argv[process.argv.length - 1];
-config({ path: `.env.${env}` });
+config();
 
-export const WS_PORT = process.env.WS_PORT as unknown as number;
+export const PORT = process.env.PORT as unknown as number;
+export const PEM_CERT = process.env.PEM_CERT as unknown as string;
+export const PEM_KEY = process.env.PEM_KEY as unknown as string;

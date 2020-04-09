@@ -1,3 +1,4 @@
+import https from 'https';
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,10 +10,8 @@ class WS {
     private wss: WebSocket.Server;
     public events = new EventEmitter;
 
-    constructor(port: number) {
-        this.wss = new WebSocket.Server({ port });
-        console.log(`Listening on port ${port} ...`);
-
+    constructor(server: https.Server) {
+        this.wss = new WebSocket.Server({ server });
         this.wss.on('connection', (client: Client) => {
             client.id = uuidv4();
             client.name = `Guest${client.id.substr(0, 4)}`;
