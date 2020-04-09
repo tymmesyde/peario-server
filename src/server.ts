@@ -1,9 +1,10 @@
 import WS from './ws';
 import { Room, User, Client, EventData, Player } from './models';
+import { WS_PORT } from './config';
 
 const ROOMS: Room[] = [];
 
-const wss = new WS(8181);
+const wss = new WS(WS_PORT);
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('player.sync', syncPlayer);
