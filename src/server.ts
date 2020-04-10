@@ -10,8 +10,10 @@ const server = https.createServer({
     cert: fs.readFileSync(PEM_CERT),
     key: fs.readFileSync(PEM_KEY)
 }).listen(PORT);
-const wss = new WS(server);
 
+console.log(`Listening on port ${PORT}`);
+
+const wss = new WS(server);
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('player.sync', syncPlayer);
@@ -19,7 +21,7 @@ wss.events.on('player.sync', syncPlayer);
 function createRoom({ client, payload }: EventData) {
     const room = new Room(payload as Room);
     room.owner = client.id;
-    room.player = { paused: true, buffering: true, time: 0 };
+    room.player = new Player();
     room.users = [];
     ROOMS.push(room);
     client.sendEvent('room', room);
