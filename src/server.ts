@@ -1,7 +1,7 @@
 import fs from 'fs';
 import https from 'https';
 import WS from './ws';
-import { Room, User, Client, EventData, Player } from './models';
+import { Room, User, EventData, Player } from './models';
 import { PORT, PEM_CERT, PEM_KEY } from './config';
 
 const ROOMS: Room[] = [];
@@ -22,7 +22,7 @@ function createRoom({ client, payload }: EventData) {
     room.player = { paused: true, buffering: true, time: 0 };
     room.users = [];
     ROOMS.push(room);
-    sendEvent(client, 'room', room);
+    client.sendEvent('room', room);
 }
 
 function joinRoom({ client, payload }: EventData) {
@@ -33,7 +33,7 @@ function joinRoom({ client, payload }: EventData) {
         client.room_id = room.id;
         const clients = wss.clients.filter(c => c.room_id === room.id);;
         room.users = clients.map(c => new User(c)); 
-        clients.forEach(c => sendEvent(c, 'sync', room));
+        clients.forEach(c => c.sendEvent('sync', room));
     }
 }
 
@@ -45,13 +45,9 @@ function syncPlayer({ client, payload }: EventData) {
         if (room.owner === client.id) {
             room.player = player;
             const clients = wss.clients.filter(c => c.room_id === room.id && c.id !== client.id);
-            clients.forEach(c => sendEvent(c, 'sync', room));
+            clients.forEach(c => c.sendEvent('sync', room));
         } else {
-            sendEvent(client, 'sync', room);
+            client.sendEvent('sync', room);
         }
     }
-}
-
-function sendEvent(client: Client, type: string, payload: object) {
-    client.send(JSON.stringify({ type, payload }));
 }
