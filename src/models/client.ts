@@ -11,6 +11,7 @@ class Client {
         this.id = uuidv4();
         this.name = `Guest${this.id.substr(0, 4)}`;
         this.socket = socket;
+        this.sendEvent('ready', {});
     }
 
     onMessage(callback: (data: string) => void) {
