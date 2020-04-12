@@ -36,7 +36,7 @@ function joinRoom({ client, payload }: EventData) {
         const clients = wss.clients.filter(c => c.room_id === room.id);;
         room.users = clients.map(c => new User(c)); 
         clients.forEach(c => c.sendEvent('sync', room));
-    }
+    } else client.sendEvent('error', { type: 'room' });
 }
 
 function syncPlayer({ client, payload }: EventData) {
@@ -51,5 +51,5 @@ function syncPlayer({ client, payload }: EventData) {
         } else {
             client.sendEvent('sync', room);
         }
-    }
+    } else client.sendEvent('error', { type: 'room' });
 }
