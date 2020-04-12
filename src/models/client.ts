@@ -5,13 +5,12 @@ class Client {
     public id: String;
     public name: String;
     public room_id: String = '';
-    public socket: WebSocket;
+    private socket: WebSocket;
 
     constructor(socket: WebSocket) {
         this.id = uuidv4();
         this.name = `Guest${this.id.substr(0, 4)}`;
         this.socket = socket;
-        this.sendEvent('ready', {});
     }
 
     onMessage(callback: (data: string) => void) {
