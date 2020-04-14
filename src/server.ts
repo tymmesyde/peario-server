@@ -2,9 +2,9 @@ import fs from 'fs';
 import https from 'https';
 import WS from './ws';
 import { Room, User, EventData, Player } from './models';
-import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK } from './config';
+import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK, INTERVAL_ROOM_UPDATE } from './config';
 
-const ROOMS: Room[] = [];
+let ROOMS: Room[] = [];
 
 const server = https.createServer({
     cert: fs.readFileSync(PEM_CERT),
@@ -58,3 +58,10 @@ function syncPlayer({ client, payload }: EventData) {
 function heartbeat({ client }: EventData) {
     client.last_active = new Date().getTime();
 }
+
+setInterval(() => {
+    ROOMS = ROOMS.filter(room => {
+        room.users = room.users.filter(user => wss.clients.find(client => client.id === user.id));
+        return room.users.length;
+    });
+}, INTERVAL_ROOM_UPDATE);
