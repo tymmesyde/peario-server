@@ -5,11 +5,14 @@ class Client {
     public id: String;
     public name: String;
     public room_id: String = '';
+    public last_active: number;
+
     private socket: WebSocket;
 
     constructor(socket: WebSocket) {
         this.id = uuidv4();
         this.name = `Guest${this.id.substr(0, 4)}`;
+        this.last_active = new Date().getTime();
         this.socket = socket;
     }
 

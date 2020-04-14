@@ -10,7 +10,7 @@ class WS {
     public events = new EventEmitter;
     public clients: Client[] = [];
 
-    constructor(server: https.Server) {
+    constructor(server: https.Server, cleanInterval: number) {
         this.wss = new WebSocket.Server({ server });
         this.wss.on('connection', (socket: WebSocket) => {
             const client = new Client(socket);
@@ -19,6 +19,9 @@ class WS {
             this.clients.push(client);
             console.log('New client:', client.id, client.name);
         });
+
+        // Clean clients when inactive
+        setInterval(() => this.clients = this.clients.filter(c => (new Date().getTime() - c.last_active) < cleanInterval), cleanInterval);
     }
 
     private handleEvents(client: Client, data: string) {

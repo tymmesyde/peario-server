@@ -2,7 +2,7 @@ import fs from 'fs';
 import https from 'https';
 import WS from './ws';
 import { Room, User, EventData, Player } from './models';
-import { PORT, PEM_CERT, PEM_KEY } from './config';
+import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK } from './config';
 
 const ROOMS: Room[] = [];
 
@@ -13,10 +13,11 @@ const server = https.createServer({
 
 console.log(`Listening on port ${PORT}`);
 
-const wss = new WS(server);
+const wss = new WS(server, INTERVAL_CLIENT_CHECK);
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('player.sync', syncPlayer);
+wss.events.on('heartbeat', heartbeat);
 
 function createRoom({ client, payload }: EventData) {
     const room = new Room(payload as Room);
@@ -52,4 +53,8 @@ function syncPlayer({ client, payload }: EventData) {
             client.sendEvent('sync', room);
         }
     } else client.sendEvent('error', { type: 'room' });
+}
+
+function heartbeat({ client }: EventData) {
+    client.last_active = new Date().getTime();
 }
