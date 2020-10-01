@@ -1,11 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import User from "./user";
+import Stream from "./stream";
 import Player from "./player";
 import Meta from "./meta";
 
 class Room {
     id: String;
-    infoHash: String;
+    stream: Stream;
     meta: Meta;
     owner: String;
     users: User[];
@@ -13,7 +14,7 @@ class Room {
 
     constructor(room: Room) {
         this.id = uuidv4();
-        this.infoHash = room.infoHash;
+        this.stream = room.stream as Stream;
         this.meta = new Meta(room.meta);
         this.owner = room.owner;
         this.users = room.users;
