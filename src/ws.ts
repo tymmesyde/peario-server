@@ -2,7 +2,7 @@ import https from 'https';
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 import { Client, User } from './models';
-import EventData from './models/event';
+import { EventData } from './models/event';
 
 class WS {
 
