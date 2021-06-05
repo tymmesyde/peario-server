@@ -1,10 +1,11 @@
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
+import { ServerEvent } from './events/server';
 
 class Client {
     public id: string;
-    public name: String;
-    public room_id: String = '';
+    public name: string;
+    public room_id: string = '';
     public last_active: number;
     public cooldown: number;
 
@@ -22,7 +23,7 @@ class Client {
         this.socket.on('message', callback);
     }
 
-    sendEvent(type: string, payload: object) {
+    sendEvent({ type, payload }: ServerEvent) {
         this.socket.send(JSON.stringify({ type, payload }));
     }
 

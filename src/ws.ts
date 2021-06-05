@@ -1,8 +1,9 @@
 import https from 'https';
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
-import { Client, User } from './models';
-import { EventData } from './models/event';
+import { Client, User } from './shared';
+import { ServerEvent, ReadyEvent } from './shared/events/server';
+import { ClientEvent } from './shared/events/client';
 
 class WS {
 
@@ -14,7 +15,7 @@ class WS {
         this.wss = new WebSocket.Server({ server });
         this.wss.on('connection', (socket: WebSocket) => {
             const client = new Client(socket);
-            client.sendEvent('ready', { user: new User(client) });
+            client.sendEvent(new ReadyEvent(new User(client)));
             client.onMessage((data: string) => this.handleEvents(client, data));
             this.clients.push(client);
             console.log('New client:', client.id, client.name);
@@ -25,9 +26,26 @@ class WS {
     }
 
     private handleEvents(client: Client, data: string) {
-        const { type, payload } = JSON.parse(data);
-        this.events.emit(type, <EventData> { client, payload });
-        console.log(client.name, type);
+        try {
+            const { type, payload } = JSON.parse(data);
+            this.events.emit(type, <ClientEvent>{ client, payload });
+            console.log(client.name, type);
+        } catch(e) {
+            console.error('Error while parsing event');
+        }
+    }
+
+    public getClientsByRoomId(room_id: string) {
+        return this.clients.filter(client => client.room_id === room_id);
+    }
+
+    public sendToClients(clients: Client[], event: ServerEvent) {
+        clients.forEach(c => c.sendEvent(event));
+    }
+
+    public sendToRoomClients(room_id: string, event: ServerEvent) {
+        const clients = this.getClientsByRoomId(room_id);
+        this.sendToClients(clients, event);
     }
 
 }
