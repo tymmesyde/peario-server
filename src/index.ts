@@ -9,6 +9,9 @@ import RoomManager from './room';
 const server = https.createServer({
     cert: fs.readFileSync(PEM_CERT),
     key: fs.readFileSync(PEM_KEY)
+}, (req, res) => {
+    res.writeHead(200);
+    res.end();
 }).listen(PORT);
 
 console.log(`Listening on port ${PORT}`);
