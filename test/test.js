@@ -80,6 +80,21 @@ describe('Client', function() {
         });
     });
 
+    it('should username user', function(done) {
+        const username = 'ohoh';
+
+        client.once('event', ({ type, payload }) => {
+            assert.strictEqual(type, 'user');
+            assert.strictEqual(payload.user.name, username);
+
+            done();
+        });
+
+        client.sendEvent('user.update', {
+            username
+        });
+    });
+
     it('should join a room that does not exist and return an error event', function(done) {
         client.once('event', ({ type, payload }) => {
             assert.strictEqual(type, 'error');
