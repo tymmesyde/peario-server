@@ -7,6 +7,12 @@ type ClientEvent = {
     payload: object
 };
 
+interface ClientUserUpdate extends ClientEvent {
+    payload: {
+        username: string;
+    }
+}
+
 interface ClientNewRoom extends ClientEvent {
     payload: {
         meta: Meta;
@@ -32,6 +38,7 @@ interface ClientSync extends ClientEvent {
 
 export {
     ClientEvent,
+    ClientUserUpdate,
     ClientNewRoom,
     CientJoinRoom,
     ClientMessage,

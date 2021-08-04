@@ -19,6 +19,19 @@ class ReadyEvent implements ServerEvent {
     }
 }
 
+class UserEvent implements ServerEvent {
+    type = 'user';
+    payload: {
+        user: User
+    };
+
+    constructor(user: User) {
+        this.payload = {
+            user
+        };
+    }
+}
+
 class RoomEvent implements ServerEvent {
     type = 'room';
     payload: Room;
@@ -65,6 +78,7 @@ class ErrorEvent implements ServerEvent {
 export {
     ServerEvent,
     ReadyEvent,
+    UserEvent,
     RoomEvent,
     SyncEvent,
     MessageEvent,

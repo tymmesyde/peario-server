@@ -2,9 +2,10 @@ import fs from 'fs';
 import https from 'https';
 import WS from './ws';
 import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK, INTERVAL_ROOM_UPDATE } from './common/config';
-import { ClientEvent, ClientNewRoom, CientJoinRoom, ClientMessage, ClientSync } from './shared/events/client';
-import { RoomEvent, SyncEvent, MessageEvent, ErrorEvent } from './shared/events/server';
+import { ClientEvent, ClientNewRoom, CientJoinRoom, ClientMessage, ClientSync, ClientUserUpdate } from './shared/events/client';
+import { RoomEvent, SyncEvent, MessageEvent, ErrorEvent, ReadyEvent, UserEvent } from './shared/events/server';
 import RoomManager from './room';
+import { User } from './shared';
 
 const server = https.createServer({
     cert: fs.readFileSync(PEM_CERT),
@@ -19,11 +20,18 @@ console.log(`Listening on port ${PORT}`);
 const wss = new WS(server, INTERVAL_CLIENT_CHECK);
 const roomManager = new RoomManager();
 
+wss.events.on('user.update', updateUser);
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('room.message', messageRoom);
 wss.events.on('player.sync', syncPlayer);
 wss.events.on('heartbeat', heartbeat);
+
+function updateUser({ client, payload }: ClientUserUpdate) {
+    const { username } = payload;
+    client.name = username;
+    client.sendEvent(new UserEvent(new User(client)));
+}
 
 function createRoom({ client, payload }: ClientNewRoom) {
     const room = roomManager.create(client, payload);
