@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/tymmesyde/peario-server/compare/v2.2.0...v2.2.1) (2021-08-05)
+
+
+### Bug Fixes
+
+* add check and character limit to username when user update ([e531a44](https://github.com/tymmesyde/peario-server/commit/e531a44a7d1beb26993313f45aa98f3f87e6f312))
+
 ## [2.2.0](https://github.com/tymmesyde/peario-server/compare/v2.1.0...v2.2.0) (2021-08-05)
 
 
