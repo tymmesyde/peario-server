@@ -29,15 +29,18 @@ wss.events.on('heartbeat', heartbeat);
 
 function updateUser({ client, payload }: ClientUserUpdate) {
     const { username } = payload;
-    client.name = username;
 
-    const user = new User(client);
-    client.sendEvent(new UserEvent(user));
+    if (username.length > 0) {
+        client.name = username.slice(0, 25);
 
-    const room = roomManager.getClientRoom(client);
-    if (room) {
-        roomManager.update(room.id, user);
-        wss.sendToRoomClients(room.id, new SyncEvent(room));
+        const user = new User(client);
+        client.sendEvent(new UserEvent(user));
+
+        const room = roomManager.getClientRoom(client);
+        if (room) {
+            roomManager.update(room.id, user);
+            wss.sendToRoomClients(room.id, new SyncEvent(room));
+        }
     }
 }
 
