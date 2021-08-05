@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/tymmesyde/peario-server/compare/v2.1.0...v2.2.0) (2021-08-05)
+
+
+### Features
+
+* add new event to update user ([ef46c7f](https://github.com/tymmesyde/peario-server/commit/ef46c7f80e6fe8fc141bf1faa408aaf664f3ac57))
+
 ## [2.1.0](https://github.com/tymmesyde/peario-server/compare/v2.0.0...v2.1.0) (2021-06-05)
 
 
