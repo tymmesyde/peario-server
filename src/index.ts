@@ -90,8 +90,11 @@ function heartbeat({ client }: ClientEvent) {
 }
 
 setInterval(() => {
-    roomManager.rooms = roomManager.rooms.filter(room => {
+    roomManager.rooms = roomManager.rooms.map(room => {
+        const tmp_users = room.users;
         room.users = room.users.filter(user => wss.clients.find(client => client.id === user.id));
-        return room.users.length;
+
+        if (JSON.stringify(room.users) !== JSON.stringify(tmp_users)) wss.sendToRoomClients(room.id, new SyncEvent(room));
+        return room;
     });
 }, INTERVAL_ROOM_UPDATE);
