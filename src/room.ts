@@ -28,6 +28,18 @@ class RoomManager {
         return room;
     }
 
+    public update(room_id: string, user: User) {
+        const room = this.rooms.find(({ id }) => id === room_id);
+        if (!room) return null;
+
+        room.users = room.users.map(room_user => {
+            if (room_user.id === user.id) room_user = user;
+            return room_user;
+        });
+
+        return room;
+    }
+
 }
 
 export default RoomManager;

@@ -30,7 +30,15 @@ wss.events.on('heartbeat', heartbeat);
 function updateUser({ client, payload }: ClientUserUpdate) {
     const { username } = payload;
     client.name = username;
-    client.sendEvent(new UserEvent(new User(client)));
+
+    const user = new User(client);
+    client.sendEvent(new UserEvent(user));
+
+    const room = roomManager.getClientRoom(client);
+    if (room) {
+        roomManager.update(room.id, user);
+        wss.sendToRoomClients(room.id, new SyncEvent(room));
+    }
 }
 
 function createRoom({ client, payload }: ClientNewRoom) {
