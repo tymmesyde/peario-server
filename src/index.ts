@@ -3,7 +3,7 @@ import https from 'https';
 import WS from './ws';
 import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK, INTERVAL_ROOM_UPDATE } from './common/config';
 import { ClientEvent, ClientNewRoom, CientJoinRoom, ClientMessage, ClientSync, ClientUserUpdate } from './shared/events/client';
-import { RoomEvent, SyncEvent, MessageEvent, ErrorEvent, ReadyEvent, UserEvent } from './shared/events/server';
+import { RoomEvent, SyncEvent, MessageEvent, ErrorEvent, UserEvent } from './shared/events/server';
 import RoomManager from './room';
 import { User } from './shared';
 
