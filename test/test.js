@@ -8,45 +8,84 @@ const waitOn = require('wait-on');
 
 const serverUrl = `wss://localhost:${PORT}`;
 
-function createClient(catchReady = false) {
+const meta = {
+    name: 'Mirabelle'
+};
+
+const stream = {
+    infoHash: '8ca6f333316aba4a769fdb8c2d5824eb9bb92763'
+};
+
+const player = {
+    paused: true,
+    buffering: true,
+    time: 0
+};
+
+function createClient(catchReady = true) {
     return new Promise(resolve => {
         const client = new WebSocket(serverUrl);
-        client.sendEvent = (type, payload) => client.send(JSON.stringify({ type, payload }));
-        client.on('message', event => {
-            const { type, payload } = JSON.parse(event);
-            client.emit('event', { type, payload });
+        client.sendEvent = (type, payload) => {
+            try {
+                client.send(JSON.stringify({ type, payload }));
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        client.on('message', (event) => {
+            try {
+                const { type, payload } = JSON.parse(event);
+                client.emit('event', type, payload);
+            } catch (e) {
+                console.error(e);
+            }
         });
 
-        if (catchReady) client.once('event', ({ type }) => type === 'ready' && resolve(client));
+        if (catchReady) client.once('event', (type, payload) => {
+            if (type === 'ready') {
+                client.id = payload.user.id;
+                resolve(client);
+            }
+        });
         else client.once('open', () => resolve(client));
+
+        client.createRoom = () => {
+            return new Promise((resolve) => {
+                client.once('event', (type, payload) => {
+                    if (type === 'room')
+                        resolve(payload);
+                });
+
+                client.sendEvent('room.new', {
+                    meta,
+                    stream
+                }); 
+            });
+        };
+
+        client.joinRoom = (id) => {
+            return new Promise((resolve) => {
+                client.once('event', (type, payload) => {
+                    if (type === 'sync')
+                        resolve(payload);
+                });
+
+                client.sendEvent('room.join', {
+                    id
+                });
+            });
+        };
     });
 }
 
 describe('Client', function() {
     this.timeout(5000);
 
-    let client;
-    let otherClient;
-
-    let ownerId;
-    let roomId;
-    const meta = {
-        name: 'Mirabelle'
-    };
-    const stream = {
-        infoHash: '8ca6f333316aba4a769fdb8c2d5824eb9bb92763'
-    };
-    const player = {
-        paused: true,
-        buffering: true,
-        time: 0
-    };
-
     function testRoomObject(payload) {
         assert.deepStrictEqual(payload.stream, stream);
         assert.deepStrictEqual(payload.meta, meta);
         assert.deepStrictEqual(payload.player, player);
-        assert.strictEqual(payload.owner, ownerId);
         assert.strictEqual(Array.isArray(payload.users), true);
     }
 
@@ -54,170 +93,250 @@ describe('Client', function() {
         return waitOn({
             resources: [`https://localhost:${PORT}`]
         });
-    })
-
-    after(function(done) {
-        client.once('close', () => {
-            otherClient.once('close', () => done());
-            otherClient.close();
-        });
-        client.close();
     });
 
-    it('should return a ready event', async function() {
-        client = await createClient();
+    it('should return a ready event', (done) => {
+        createClient(false).then((client) => {
+            client.once('event', (type, payload) => {
+                assert.strictEqual(type, 'ready');
+                assert.strictEqual(typeof payload, 'object');
+                assert.strictEqual(typeof payload.user, 'object');
+                assert.strictEqual(typeof payload.user.id, 'string');
+                assert.strictEqual(typeof payload.user.name, 'string');
+                assert.strictEqual(typeof payload.user.room_id, 'string');
 
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'ready');
-            assert.strictEqual(typeof payload, 'object');
-            assert.strictEqual(typeof payload.user, 'object');
-            assert.strictEqual(typeof payload.user.id, 'string');
-            assert.strictEqual(typeof payload.user.name, 'string');
-            assert.strictEqual(typeof payload.user.room_id, 'string');
-
-            ownerId = payload.user.id;
-            return Promise.resolve();
+                client.close();
+                done();
+            });
         });
     });
 
-    it('should username user', function(done) {
-        const username = 'ohoh';
+    it('should update username', (done) => {
+        createClient().then((client) => {
+            const username = 'ohoh';
 
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'user');
-            assert.strictEqual(payload.user.name, username);
+            client.once('event', (type, payload) => {
+                assert.strictEqual(type, 'user');
+                assert.strictEqual(payload.user.name, username);
 
-            done();
-        });
+                client.close();
+                done();
+            });
 
-        client.sendEvent('user.update', {
-            username
-        });
-    });
-
-    it('should join a room that does not exist and return an error event', function(done) {
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'error');
-            assert.strictEqual(payload.type, 'room');
-
-            done();
-        });
-
-        client.sendEvent('room.join', {
-            id: 'ahah'
+            client.sendEvent('user.update', {
+                username
+            });
         });
     });
     
-    it('should create a room and return a room event', function(done) {
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'room');
-            testRoomObject(payload);
-            assert.strictEqual(typeof payload.id, 'string');
+    it('should create a room and return a room event', (done) => {
+        createClient().then((client) => {
+            client.createRoom().then((roomPayload) => {
+                testRoomObject(roomPayload);
+                assert.strictEqual(typeof roomPayload.id, 'string');
 
-            roomId = payload.id;
-            done();
-        });
-
-        client.sendEvent('room.new', {
-            meta,
-            stream
-        });
-    });
-
-    it('should send a message without joining a room and return an error event', function(done) {
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'error');
-            assert.strictEqual(payload.type, 'room');
-
-            done();
-        });
-
-        client.sendEvent('room.message', {
-            content: '.'
-        });
-    });
-
-    it('should join a room and return a sync event', function(done) {
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'sync');
-            testRoomObject(payload);
-            assert.strictEqual(payload.id, roomId);
-            assert.strictEqual(payload.owner, ownerId);
-            assert.strictEqual(payload.users[0].id, ownerId);
-            assert.strictEqual(payload.users[0].room_id, roomId);
-
-            done();
-        });
-
-        client.sendEvent('room.join', {
-            id: roomId
-        });
-    });
-
-    it('should send a message and return an error event', function(done) {
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'error');
-            assert.strictEqual(payload.type, 'cooldown');
-
-            done();
-        });
-
-        client.sendEvent('room.message', {
-            content: '.'
-        });
-    });
-
-    it('should send a message and return a message event', function(done) {
-        let content = 'hello';
-
-        client.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'message');
-            assert.strictEqual(payload.user, ownerId);
-            assert.strictEqual(payload.content, content);
-
-            done();
-        });
-
-        setTimeout(() => {
-            client.sendEvent('room.message', {
-                content
+                client.close();
+                done();
             });
-        }, 3000);
-    });
-
-    it('should let other cients to join room', async function() {
-        otherClient = await createClient(true);
-
-        otherClient.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'sync');
-            testRoomObject(payload);
-            assert.strictEqual(payload.id, roomId);
-            assert.strictEqual(payload.owner, ownerId);
-            assert.strictEqual(payload.users.length, 2);
-
-            return Promise.resolve();
-        });
-
-        otherClient.sendEvent('room.join', {
-            id: roomId
         });
     });
 
-    it('should sync and return a sync event to other clients', function(done) {
+    it('should join a room that does not exist and return an error event', (done) => {
+        createClient().then((client) => {
+            client.once('event', (type, payload) => {
+                assert.strictEqual(type, 'error');
+                assert.strictEqual(payload.type, 'room');
+
+                client.close();
+                done();
+            });
+
+            client.sendEvent('room.join', {
+                id: 'ahah'
+            });
+        });
+    });
+
+    it('should join a room and return a sync event', (done) => {
+        createClient().then((client) => {
+            client.createRoom().then(({ id, owner }) => {
+                client.once('event', (type, payload) => {
+                    assert.strictEqual(type, 'sync');
+                    testRoomObject(payload);
+                    assert.strictEqual(payload.id, id);
+                    assert.strictEqual(payload.owner, owner);
+                    assert.strictEqual(payload.users[0].id, owner);
+                    assert.strictEqual(payload.users[0].room_id, id);
+
+                    client.close();
+                    done();
+                });
+
+                client.sendEvent('room.join', {
+                    id
+                });
+            });
+        });
+    });
+
+    it('should send a message without joining a room and return a room error event', (done) => {
+        createClient().then((client) => {
+            client.once('event', (type, payload) => {
+                assert.strictEqual(type, 'error');
+                assert.strictEqual(payload.type, 'room');
+
+                client.close();
+                done();
+            });
+
+            client.sendEvent('room.message', {
+                content: '.'
+            });
+        });
+    });
+
+    it('should send multiple messages and return a cooldown error event', (done) => {
+         createClient().then((client) => {
+            client.createRoom().then(({ id }) => {
+                client.joinRoom(id).then(() => {
+                    client.once('event', (type, payload) => {
+                        assert.strictEqual(type, 'error');
+                        assert.strictEqual(payload.type, 'cooldown');
+
+                        client.close();
+                        done();
+                    });
+
+                    client.sendEvent('room.message', {
+                        content: '.'
+                    });
+
+                    client.sendEvent('room.message', {
+                        content: '.'
+                    });
+                });
+            });
+        });
+    });
+
+    it('should send a message and return a message event', (done) => {
+        createClient().then((client) => {
+            client.createRoom().then(({ id }) => {
+                client.joinRoom(id).then(() => {
+                    let content = 'hello';
+
+                    client.once('event', (type, payload) => {
+                        assert.strictEqual(type, 'message');
+                        assert.strictEqual(payload.user, client.id);
+                        assert.strictEqual(payload.content, content);
+
+                        client.close();
+                        done();
+                    });
+
+                    setTimeout(() => {
+                        client.sendEvent('room.message', {
+                            content
+                        });
+                    }, 3000);
+                });
+            });
+        });
+    });
+
+    it('should let other clients to join room', (done) => {
+        createClient().then((client) => {
+            createClient().then((otherClient) => {
+                client.createRoom().then(({ id, owner }) => {
+                    client.joinRoom(id).then(() => {
+                        otherClient.joinRoom(id).then((syncPayload) => {
+                            testRoomObject(syncPayload);
+                            assert.strictEqual(syncPayload.id, id);
+                            assert.strictEqual(syncPayload.owner, owner);
+                            assert.strictEqual(syncPayload.users.length, 2);
+
+                            client.close();
+                            otherClient.close();
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('should try to update room ownership and return user error', (done) => {
+        createClient().then((client) => {
+            client.createRoom().then(({ id }) => {
+                client.joinRoom(id).then(() => {
+                    client.once('event', (type, payload) => {
+                        assert.strictEqual(type, 'error');
+                        assert.strictEqual(payload.type, 'user');
+
+                        client.close();
+                        done();
+                    });
+
+                    client.sendEvent('room.updateOwnership', {
+                        userId: 'gigou'
+                    });
+                });
+            });
+        });
+    });
+
+    it('should update room ownership', (done) => {
+        createClient().then((client) => {
+            createClient().then((otherClient) => {
+                client.createRoom().then(({ id }) => {
+                    client.joinRoom(id).then(() => {
+                        otherClient.joinRoom(id).then(() => {
+                            client.once('event', (type, payload) => {
+                                assert.strictEqual(type, 'sync');
+                                assert.strictEqual(payload.owner, otherClient.id);
+
+                                client.close();
+                                otherClient.close();
+                                done();
+                            });
+
+                            client.sendEvent('room.updateOwnership', {
+                                userId: otherClient.id
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('should sync player and return a player sync event to other clients', (done) => {
         const playerUpdate = {
             paused: false,
             buffering: false,
             time: 100
         };
 
-        otherClient.once('event', ({ type, payload }) => {
-            assert.strictEqual(type, 'sync');
-            assert.deepStrictEqual(payload.player, playerUpdate);
+        createClient().then((client) => {
+            createClient().then((otherClient) => {
+                client.createRoom().then(({ id }) => {
+                    client.joinRoom(id).then(() => {
+                        otherClient.joinRoom(id).then(() => {
+                            otherClient.once('event', (type, payload) => {
+                                assert.strictEqual(type, 'sync');
+                                assert.deepStrictEqual(payload.player, playerUpdate);
 
-            done();
+                                client.close();
+                                otherClient.close();
+                                done();
+                            });
+
+                            client.sendEvent('player.sync', playerUpdate);
+                        });
+                    });
+                });
+            });
         });
-
-        client.sendEvent('player.sync', playerUpdate);
     });
 
 });

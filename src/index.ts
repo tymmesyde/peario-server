@@ -2,7 +2,7 @@ import fs from 'fs';
 import https from 'https';
 import WS from './ws';
 import { PORT, PEM_CERT, PEM_KEY, INTERVAL_CLIENT_CHECK, INTERVAL_ROOM_UPDATE } from './common/config';
-import { ClientEvent, ClientNewRoom, CientJoinRoom, ClientMessage, ClientSync, ClientUserUpdate } from './shared/events/client';
+import { ClientEvent, ClientNewRoom, CientJoinRoom, ClientMessage, ClientSync, ClientUserUpdate, ClientUpdateOwnership } from './shared/events/client';
 import { RoomEvent, SyncEvent, MessageEvent, ErrorEvent, UserEvent } from './shared/events/server';
 import RoomManager from './room';
 import { User } from './shared';
@@ -24,6 +24,7 @@ wss.events.on('user.update', updateUser);
 wss.events.on('room.new', createRoom);
 wss.events.on('room.join', joinRoom);
 wss.events.on('room.message', messageRoom);
+wss.events.on('room.updateOwnership', updateRoomOwnership);
 wss.events.on('player.sync', syncPlayer);
 wss.events.on('heartbeat', heartbeat);
 
@@ -38,7 +39,7 @@ function updateUser({ client, payload }: ClientUserUpdate) {
 
         const room = roomManager.getClientRoom(client);
         if (room) {
-            roomManager.update(room.id, user);
+            roomManager.updateUser(room.id, user);
             wss.sendToRoomClients(room.id, new SyncEvent(room));
         }
     }
@@ -68,6 +69,21 @@ function messageRoom({ client, payload }: ClientMessage) {
 
         wss.sendToRoomClients(room.id, event);
         client.resetCooldown();
+    }
+}
+
+function updateRoomOwnership({ client, payload }: ClientUpdateOwnership) {
+    const room = roomManager.getClientRoom(client);
+    if (!room) return client.sendEvent(new ErrorEvent('room'));
+
+    if (payload && payload.userId && room.owner === client.id) {
+        const roomUser = room.users.find(({ id, room_id }) => id === payload.userId && room_id === room.id);
+
+        if (!roomUser) return client.sendEvent(new ErrorEvent('user'));
+
+        const updatedRoom = roomManager.updateOwner(room.id, roomUser);
+        if (updatedRoom)
+            wss.sendToRoomClients(updatedRoom.id, new SyncEvent(updatedRoom));
     }
 }
 

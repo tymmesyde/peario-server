@@ -8,6 +8,10 @@ class RoomManager {
         this.rooms = [];
     }
 
+    _find(room_id: string) {
+        return this.rooms.find(({ id }) => id === room_id);
+    }
+
     public getClientRoom(client: Client) {
         return this.rooms.find(({ id }) => id === client.room_id) || null;
     }
@@ -20,7 +24,7 @@ class RoomManager {
     }
 
     public join(client: Client, room_id: string) {
-        const room = this.rooms.find(({ id }) => id === room_id);
+        const room = this._find(room_id);
         if (!room) return null;
 
         client.room_id = room.id;
@@ -28,14 +32,23 @@ class RoomManager {
         return room;
     }
 
-    public update(room_id: string, user: User) {
-        const room = this.rooms.find(({ id }) => id === room_id);
+    public updateUser(room_id: string, user: User) {
+        const room = this._find(room_id);
         if (!room) return null;
 
         room.users = room.users.map(room_user => {
             if (room_user.id === user.id) room_user = user;
             return room_user;
         });
+
+        return room;
+    }
+
+    public updateOwner(room_id: string, user: User) {
+        const room = this._find(room_id);
+        if (!room) return null;
+
+        room.owner = user.id;
 
         return room;
     }

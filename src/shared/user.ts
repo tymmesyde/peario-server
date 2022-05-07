@@ -1,9 +1,9 @@
 import Client from "./client";
 
 class User {
-    id: String;
-    name: String;
-    room_id: String;
+    id: string;
+    name: string;
+    room_id: string;
 
     constructor(client: Client) {
         this.id = client.id;

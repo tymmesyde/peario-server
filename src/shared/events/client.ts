@@ -32,6 +32,12 @@ interface ClientMessage extends ClientEvent {
     }
 }
 
+interface ClientUpdateOwnership extends ClientEvent {
+    payload: {
+        userId: string;
+    }
+}
+
 interface ClientSync extends ClientEvent {
     payload: Player;
 }
@@ -42,5 +48,6 @@ export {
     ClientNewRoom,
     CientJoinRoom,
     ClientMessage,
+    ClientUpdateOwnership,
     ClientSync
 }
