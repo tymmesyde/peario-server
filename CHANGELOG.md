@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/tymmesyde/peario-server/compare/v2.2.2...v2.3.0) (2022-05-07)
+
+
+### Features
+
+* implement update room ownership and refactor test ([1037096](https://github.com/tymmesyde/peario-server/commit/1037096ff0f916d8249df7834bf9cb4b17b82bba))
+
 ### [2.2.2](https://github.com/tymmesyde/peario-server/compare/v2.2.1...v2.2.2) (2021-09-04)
 
 ### [2.2.1](https://github.com/tymmesyde/peario-server/compare/v2.2.0...v2.2.1) (2021-08-05)
