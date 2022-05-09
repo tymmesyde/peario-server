@@ -19,7 +19,7 @@ class Room {
 
     constructor(options: RoomOptions) {
         this.id = uuidv4();
-        this.stream = options.stream;
+        this.stream = new Stream(options.stream);
         this.meta = new Meta(options.meta);
         this.player = new Player();
         this.users = [];
