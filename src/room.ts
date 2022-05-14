@@ -28,7 +28,11 @@ class RoomManager {
         if (!room) return null;
 
         client.room_id = room.id;
-        room.users.push(new User(client));
+        room.users = [
+            ...room.users.filter(({ id }) => id !== client.id),
+            new User(client)
+        ];
+
         return room;
     }
 
