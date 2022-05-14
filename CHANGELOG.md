@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.1](https://github.com/tymmesyde/peario-server/compare/v2.3.0...v2.3.1) (2022-05-14)
+
+
+### Bug Fixes
+
+* **room:** prevent duplicated users ([9f675ef](https://github.com/tymmesyde/peario-server/commit/9f675eff0b3df27e014596e35c3d7a53ab2813eb))
+
 ## [2.3.0](https://github.com/tymmesyde/peario-server/compare/v2.2.2...v2.3.0) (2022-05-07)
 
 
