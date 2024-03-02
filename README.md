@@ -16,7 +16,7 @@ INTERVAL_CLIENT_CHECK=3000
 INTERVAL_ROOM_UPDATE=600000
 ```
 
-Add this signed certificate to your browser certificates manager
+Open `https://localhost:8181` in your browser and click `Accept the risk and Continue` (Firefox) or `Proceed to localhost (unsafe)` (Chrome)
 
 Install dependencies
 ```
